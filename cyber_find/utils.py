@@ -4,7 +4,7 @@ Utility functions for CyberFind
 
 import hashlib
 import re
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 from urllib.parse import quote, urlparse
 
 
@@ -58,7 +58,33 @@ def email_to_hash(email: str) -> str:
 
 
 def format_url(base_url: str, username: str) -> str:
-    """Format URL with username placeholder"""
+    """Format URL with username placeholder or regex pattern.
+
+    Supports two modes:
+    - Standard: replaces ``{username}`` in the URL template.
+    - Regex: if *base_url* starts with ``regex:``, the remainder is
+      treated as a regex pattern.  The escaped username is inserted in
+      place of the first capture group (if present) or appended, and
+      the resulting string is returned as-is (useful for complex URL
+      schemes).
+
+    Args:
+        base_url: URL template, optionally prefixed with ``regex:``.
+        username: The username to insert.
+
+    Returns:
+        Formatted URL string.
+    """
+    if base_url.startswith("regex:"):
+        pattern = base_url[len("regex:") :]
+        escaped_username = re.escape(username)
+        # Replace the first capture group placeholder with the escaped username
+        if "(" in pattern and ")" in pattern:
+            # Replace the first capture group with the literal escaped username
+            result = re.sub(r"\([^)]*\)", escaped_username, pattern, count=1)
+        else:
+            result = pattern + escaped_username
+        return result
     return base_url.replace("{username}", quote(username, safe=""))
 
 
@@ -132,9 +158,6 @@ def split_urls(urls: str) -> List[str]:
     # Split by comma, newline, or semicolon
     parts = re.split(r"[,\n;]", urls)
     return [url.strip() for url in parts if url.strip()]
-
-
-from typing import Any, Dict, List
 
 
 def combine_results(results: List[Dict[str, Any]]) -> Dict[str, Any]:

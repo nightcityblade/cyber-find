@@ -13,3 +13,7 @@ Habr|https://habr.com/ru/users/{username}|forums|8
 Toster|https://toster.ru/user/{username}|forums|7
 4PDA|https://4pda.to/forum/index.php?showuser={username}|forums|7
 CodeProject|https://www.codeproject.com/script/Membership/View.aspx?mid={username}|forums|6
+
+# Regex-based URL patterns (prefix URL with "regex:" for advanced matching)
+Discourse Meta|regex:https://meta\.discourse\.org/u/([a-z0-9._-]+)/summary|forums|6
+Pair Programming Hub|regex:https://pair\.dev/users/([a-z0-9_]+)/profile|forums|5
