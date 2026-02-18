@@ -7,6 +7,8 @@ import logging
 from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, List
 
+from tqdm import tqdm
+
 from .core import CyberFind, SearchMode
 from .models import SearchResult
 
@@ -59,10 +61,20 @@ class BatchSearch:
                     return username, {}
 
         tasks = [search_with_limit(username) for username in usernames]
-        search_results = await asyncio.gather(*tasks)
 
-        for username, found in search_results:
+        progress_bar = tqdm(
+            total=len(tasks),
+            desc="Batch search",
+            unit="user",
+            bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]",
+        )
+
+        for coro in asyncio.as_completed(tasks):
+            username, found = await coro
             results[username] = found
+            progress_bar.update(1)
+
+        progress_bar.close()
 
         return results
 
@@ -95,10 +107,20 @@ class BatchSearch:
                     return username, False
 
         tasks = [check_site(username) for username in usernames]
-        check_results = await asyncio.gather(*tasks)
 
-        for username, exists in check_results:
+        progress_bar = tqdm(
+            total=len(tasks),
+            desc=f"Checking {site_name}",
+            unit="user",
+            bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]",
+        )
+
+        for coro in asyncio.as_completed(tasks):
+            username, exists = await coro
             results[username] = exists
+            progress_bar.update(1)
+
+        progress_bar.close()
 
         return results
 
@@ -131,9 +153,19 @@ class BatchSearch:
                     return site_name, False
 
         tasks = [check_site(site) for site in site_names]
-        check_results = await asyncio.gather(*tasks)
 
-        for site, exists in check_results:
+        progress_bar = tqdm(
+            total=len(tasks),
+            desc=f"Searching {username}",
+            unit="site",
+            bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]",
+        )
+
+        for coro in asyncio.as_completed(tasks):
+            site, exists = await coro
             results[site] = exists
+            progress_bar.update(1)
+
+        progress_bar.close()
 
         return results
