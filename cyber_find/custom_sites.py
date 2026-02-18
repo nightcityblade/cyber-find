@@ -1,5 +1,9 @@
 """
 Custom Site Lists Module - Support for custom site lists
+
+Supports standard URL templates with ``{username}`` substitution as well as
+regex-based URL patterns prefixed with ``regex:``.  See :func:`cyber_find.utils.format_url`
+for details on how regex patterns are resolved at query time.
 """
 
 import os

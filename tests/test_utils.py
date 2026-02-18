@@ -8,6 +8,7 @@ from cyber_find.utils import (
     combine_results,
     format_duration,
     format_size,
+    format_url,
     is_valid_email,
     is_valid_phone,
     is_valid_username,
@@ -186,3 +187,38 @@ class TestCombineResults:
         result = combine_results(results)
         assert result["total_found"] == 1
         assert result["total_errors"] == 1
+
+
+@pytest.mark.unit
+class TestFormatUrl:
+    """Test format_url with standard and regex patterns"""
+
+    def test_standard_substitution(self):
+        """Standard {username} replacement still works"""
+        url = format_url("https://github.com/{username}", "john_doe")
+        assert url == "https://github.com/john_doe"
+
+    def test_standard_special_chars_encoded(self):
+        """Special characters are percent-encoded in standard mode"""
+        url = format_url("https://example.com/{username}", "user name")
+        assert "user%20name" in url
+
+    def test_regex_with_capture_group(self):
+        """Regex mode replaces capture group with escaped username"""
+        url = format_url(r"regex:https://site\.com/u/([a-z0-9_]+)/profile", "john_doe")
+        assert url == r"https://site\.com/u/john_doe/profile"
+
+    def test_regex_escapes_username(self):
+        """Username with regex metacharacters is escaped in regex mode"""
+        url = format_url(r"regex:https://site\.com/u/([a-z0-9_.]+)/profile", "user.name")
+        assert r"user\.name" in url
+
+    def test_regex_no_capture_group(self):
+        """Regex mode without capture group appends username"""
+        url = format_url(r"regex:https://site\.com/search?q=", "testuser")
+        assert url == r"https://site\.com/search?q=testuser"
+
+    def test_regex_preserves_standard_urls(self):
+        """Non-regex URLs are unaffected even if they contain 'regex' elsewhere"""
+        url = format_url("https://regex.example.com/{username}", "alice")
+        assert url == "https://regex.example.com/alice"
